@@ -1,17 +1,97 @@
-import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { Suspense, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import ProductPage from "./pages/ProductPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import RecommendationPage from "./pages/RecommendationPage";
-import AdminDashboard from "./pages/AdminDashboard";
 import OrderHistory from "./pages/OrderHistory";
 import AdminLogin from "./pages/AdminLogin";
 import UserLogin from "./pages/UserLogin";
 import UserRegister from "./pages/UserRegister";
 import AdminRegister from "./pages/AdminRegister";
+
+const AdminLayout = React.lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = React.lazy(() => import("./pages/admin/Dashboard"));
+const AdminSales = React.lazy(() => import("./pages/admin/Sales"));
+const AdminInventory = React.lazy(() => import("./pages/admin/Inventory"));
+const AdminCustomers = React.lazy(() => import("./pages/admin/Customers"));
+const AdminMarketing = React.lazy(() => import("./pages/admin/Marketing"));
+
+function AppChrome() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  return (
+    <>
+      {!isAdmin && <Navbar />}
+      <Routes>
+        <Route path="/" element={<ProductPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/recommend" element={<RecommendationPage />} />
+        <Route path="/orders" element={<OrderHistory />} />
+        <Route path="/login" element={<AdminLogin />} />
+        <Route path="/userlogin" element={<UserLogin />} />
+        <Route path="/register" element={<UserRegister />} />
+        <Route path="/admin-register" element={<AdminRegister />} />
+
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<div className="p-6 text-sm text-slate-700/70 dark:text-white/60">Loading admin…</div>}>
+              <AdminLayout />
+            </Suspense>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route
+            path="dashboard"
+            element={
+              <Suspense fallback={<div className="p-6">Loading dashboard…</div>}>
+                <AdminDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="sales"
+            element={
+              <Suspense fallback={<div className="p-6">Loading sales…</div>}>
+                <AdminSales />
+              </Suspense>
+            }
+          />
+          <Route
+            path="inventory"
+            element={
+              <Suspense fallback={<div className="p-6">Loading inventory…</div>}>
+                <AdminInventory />
+              </Suspense>
+            }
+          />
+          <Route
+            path="customers"
+            element={
+              <Suspense fallback={<div className="p-6">Loading customers…</div>}>
+                <AdminCustomers />
+              </Suspense>
+            }
+          />
+          <Route
+            path="marketing"
+            element={
+              <Suspense fallback={<div className="p-6">Loading marketing…</div>}>
+                <AdminMarketing />
+              </Suspense>
+            }
+          />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
 
@@ -20,7 +100,12 @@ function App() {
       const isDark =
         window.matchMedia &&
         window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.classList.toggle("dark", Boolean(isDark));
+      // Only apply system theme if user did not pick explicit theme in localStorage.
+      const stored = localStorage.getItem("theme");
+      const isExplicit = stored === "light" || stored === "dark";
+      if (!isExplicit) {
+        document.documentElement.classList.toggle("dark", Boolean(isDark));
+      }
     };
 
     apply();
@@ -36,32 +121,7 @@ function App() {
   return (
 
     <BrowserRouter>
-
-      <Navbar />
-
-      <Routes>
-
-        <Route path="/" element={<ProductPage />} />
-
-        <Route path="/cart" element={<CartPage />} />
-
-        <Route path="/checkout" element={<CheckoutPage />} />
-
-        <Route path="/recommend" element={<RecommendationPage />} />
-
-        <Route path="/admin" element={<AdminDashboard />} />
-
-        <Route path="/orders" element={<OrderHistory />} />
-
-        <Route path="/login" element={<AdminLogin />} />
-
-        <Route path="/userlogin" element={<UserLogin/>}/>
-        
-<Route path="/register" element={<UserRegister/>}/>
-
-<Route path="/admin-register" element={<AdminRegister />} />
-
-      </Routes>
+      <AppChrome />
 
     </BrowserRouter>
 

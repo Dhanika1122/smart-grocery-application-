@@ -2,12 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg0: #f6f7fb;
+  --card: rgba(255, 255, 255, 0.72);
+  --cardBorder: rgba(255, 255, 255, 0.85);
+  --text: #0f172a;
+  --muted: rgba(15, 23, 42, 0.68);
+  --shadow: 0 25px 70px rgba(0, 0, 0, 0.10);
+}
+
+.dark {
+  --bg0: #050b08;
+  --card: rgba(6, 18, 14, 0.62);
+  --cardBorder: rgba(255, 255, 255, 0.14);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.64);
+  --shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+}
+
 html,
 body {
   height: 100%;
 }
 
 body {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
   background: radial-gradient(
       1200px circle at 10% 0%,
       rgba(16, 185, 129, 0.22),
@@ -18,8 +38,10 @@ body {
       rgba(250, 204, 21, 0.18),
       transparent 45%
     ),
-    #f6f7fb;
+    var(--bg0);
   scroll-behavior: smooth;
+  color: var(--text);
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 .dark body {
@@ -33,5 +55,13 @@ body {
       rgba(250, 204, 21, 0.14),
       transparent 45%
     ),
-    #050b08;
+    var(--bg0);
+}
+
+/* Subtle noise overlay (optional) */
+.noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.14'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.25;
+  pointer-events: none;
 }

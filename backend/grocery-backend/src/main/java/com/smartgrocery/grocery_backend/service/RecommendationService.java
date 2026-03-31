@@ -7,14 +7,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.smartgrocery.grocery_backend.model.Product;
+import com.smartgrocery.grocery_backend.model.SmartDietPlan;
+import com.smartgrocery.grocery_backend.service.AIService;
 import com.smartgrocery.grocery_backend.repository.ProductRepository;
 
 @Service
 public class RecommendationService {
 
     private final ProductRepository productRepository;
+
+    @Autowired
+    private AIService aiService;
 
     public RecommendationService(ProductRepository productRepository) {
         this.productRepository = productRepository;
@@ -122,5 +128,24 @@ public class RecommendationService {
 
     return List.of("Fruits","Vegetables");
 }
+
+    // AI-backed smart diet plan (STRICT JSON -> structured response)
+    public SmartDietPlan getSmartDietPlan(String input) {
+        // Safety: never throw to avoid breaking existing flows; return fallback JSON on AI failure.
+        try {
+            return aiService.generateSmartDietPlan(input);
+        } catch (Exception e) {
+            // Fallback to an empty structured object.
+            SmartDietPlan plan = new SmartDietPlan();
+            plan.setBreakfast(List.of());
+            plan.setLunch(List.of());
+            plan.setDinner(List.of());
+            plan.setGrocery(List.of());
+            plan.setWeeklyPlan(List.of());
+            plan.setWaterIntake("—");
+            plan.setDoctorTips(List.of());
+            return plan;
+        }
+    }
 
 }

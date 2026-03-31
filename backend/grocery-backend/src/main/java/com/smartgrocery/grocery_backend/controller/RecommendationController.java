@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smartgrocery.grocery_backend.model.Product;
+import com.smartgrocery.grocery_backend.model.SmartDietPlan;
 import com.smartgrocery.grocery_backend.service.RecommendationService;
 
 @RestController
@@ -56,4 +57,10 @@ public List<Product> getRecommendedProducts(@RequestParam String keyword) {
 public List<String> getCartSuggestions(@RequestParam String product) {
     return recommendationService.getCartSuggestions(product);
 }
+
+    // AI-backed smart diet plan with STRICT structured JSON output
+    @GetMapping("/smart-diet-plan")
+    public SmartDietPlan getSmartDietPlan(@RequestParam String input) {
+        return recommendationService.getSmartDietPlan(input);
+    }
 }
