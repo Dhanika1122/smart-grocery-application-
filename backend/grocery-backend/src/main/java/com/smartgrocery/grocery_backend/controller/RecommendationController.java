@@ -56,5 +56,4 @@ public List<Product> getRecommendedProducts(@RequestParam String keyword) {
 public List<String> getCartSuggestions(@RequestParam String product) {
     return recommendationService.getCartSuggestions(product);
 }
-
 }

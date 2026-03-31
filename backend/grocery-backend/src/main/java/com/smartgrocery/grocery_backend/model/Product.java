@@ -4,9 +4,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Product {
+
+
+    @ManyToOne
+@JoinColumn(name = "admin_id")
+private Admin admin; 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +23,8 @@ public class Product {
     private String category;
     private double price;
     private int stock;
-
+    private String image;   // ⭐ new field
+    
     public Product() {}
 
     public Long getId() {
@@ -54,4 +62,22 @@ public class Product {
     public void setStock(int stock) {
         this.stock = stock;
     }
+
+    // ⭐ Image Getter
+    public String getImage() {
+        return image;
+    }
+
+    // ⭐ Image Setter
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public Admin getAdmin() {
+    return admin;
+}
+
+public void setAdmin(Admin admin) {
+    this.admin = admin;
+}
 }

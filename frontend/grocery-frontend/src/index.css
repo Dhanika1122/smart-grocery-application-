@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(
+      1200px circle at 10% 0%,
+      rgba(16, 185, 129, 0.22),
+      transparent 40%
+    ),
+    radial-gradient(
+      900px circle at 90% 10%,
+      rgba(250, 204, 21, 0.18),
+      transparent 45%
+    ),
+    #f6f7fb;
+  scroll-behavior: smooth;
+}
+
+.dark body {
+  background: radial-gradient(
+      1200px circle at 10% 0%,
+      rgba(16, 185, 129, 0.18),
+      transparent 40%
+    ),
+    radial-gradient(
+      900px circle at 90% 10%,
+      rgba(250, 204, 21, 0.14),
+      transparent 45%
+    ),
+    #050b08;
+}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
+import { motion } from "framer-motion";
 
 function OrderHistory() {
 
@@ -24,11 +25,16 @@ function OrderHistory() {
 
   return (
 
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="px-4 sm:px-6 lg:px-10 py-10">
 
-      <h1 className="text-3xl font-bold mb-6">
+      <motion.h1
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="text-3xl font-extrabold mb-6"
+      >
         My Orders 📦
-      </h1>
+      </motion.h1>
 
       {orders.map(order => {
 
@@ -38,9 +44,12 @@ function OrderHistory() {
 
         return (
 
-          <div
+          <motion.div
             key={order.id}
-            className="bg-white shadow-md rounded-lg p-4 mb-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="bg-white/55 backdrop-blur-xl border border-white/60 shadow-sm rounded-2xl p-4 mb-4"
           >
 
             <h3 className="text-lg font-semibold">
@@ -59,7 +68,7 @@ function OrderHistory() {
               Status: {order.status}
             </p>
 
-          </div>
+          </motion.div>
 
         );
 

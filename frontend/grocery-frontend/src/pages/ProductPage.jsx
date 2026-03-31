@@ -13,11 +13,14 @@ function ProductPage() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     API.get("/products")
       .then((res) => setProducts(res.data))
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err))
+      .finally(() => setLoading(false));
   }, []);
 
   const addToCart = async (productId) => {
@@ -53,7 +56,7 @@ function ProductPage() {
 
   return (
 
-    <div style={{ padding: "30px" }}>
+    <div className="px-4 sm:px-6 lg:px-10 py-8">
 
       {/* Hero Banner */}
       <HeroBanner />
@@ -82,24 +85,31 @@ function ProductPage() {
       </h1>
 
       {/* Product Grid */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-        gap: "20px",
-        marginTop: "20px"
-      }}>
-
-        {filteredProducts.map((product) => (
-
-          <ProductCard
-            key={product.id}
-            product={product}
-            addToCart={addToCart}
-          />
-
-        ))}
-
-      </div>
+      {loading ? (
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="rounded-3xl bg-white/55 backdrop-blur-xl border border-white/60 p-5 shadow-sm animate-pulse"
+            >
+              <div className="mx-auto h-24 w-24 rounded-2xl bg-slate-200" />
+              <div className="mt-4 h-3 w-3/4 bg-slate-200 rounded" />
+              <div className="mt-2 h-3 w-1/2 bg-slate-200 rounded" />
+              <div className="mt-4 h-10 w-full bg-slate-200 rounded-2xl" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              addToCart={addToCart}
+            />
+          ))}
+        </div>
+      )}
 
     </div>
 

@@ -15,6 +15,9 @@ public class CartItem {
     private Long productId;
     private int quantity;
 
+    // Tenant isolation: each cart item belongs to a specific user.
+    private Long userId;
+
     public CartItem() {}
 
     public Long getId() {
@@ -35,5 +38,13 @@ public class CartItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
