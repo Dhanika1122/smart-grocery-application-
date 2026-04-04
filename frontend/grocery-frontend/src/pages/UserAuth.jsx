@@ -9,6 +9,10 @@ function UserAuth({ initialMode = "login" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
 
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -18,13 +22,12 @@ function UserAuth({ initialMode = "login" }) {
   const isLogin = mode === "login";
 
   useEffect(() => {
-    // If already logged in, redirect to home.
+    // If already logged in, redirect to profile.
     const token = localStorage.getItem("token");
     const userRaw = localStorage.getItem("user");
+    const adminRaw = localStorage.getItem("admin");
 
     // Prevent stale/partial auth state after refresh:
-    // - If token exists but user info is missing, clear token/user.
-    // - If both exist, redirect to home.
     if (token && !userRaw) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -32,7 +35,11 @@ function UserAuth({ initialMode = "login" }) {
     }
 
     if (token && userRaw) {
-      navigate("/");
+      if (adminRaw) {
+        navigate("/admin/dashboard");
+        return;
+      }
+      navigate("/user/profile");
     }
   }, [navigate]);
 
@@ -49,9 +56,16 @@ function UserAuth({ initialMode = "login" }) {
         return;
       }
     } else {
-      if (!name.trim() || !email.trim() || !password.trim()) {
-        alert("Please fill all fields");
+      if (!name.trim() || !email.trim() || !password.trim() || !phone.trim() || !address.trim()) {
+        alert("Please fill name, email, password, phone, and address");
         return;
+      }
+      if (age.trim()) {
+        const n = Number(age);
+        if (!Number.isFinite(n) || n < 1 || n > 130) {
+          alert("Please enter a valid age (1–130) or leave it blank");
+          return;
+        }
       }
     }
 
@@ -59,7 +73,15 @@ function UserAuth({ initialMode = "login" }) {
       const endpoint = isLogin ? "/userauth/login" : "/userauth/register";
       const payload = isLogin
         ? { email: email, password: password }
-        : { name: name, email: email, password: password };
+        : {
+            name: name.trim(),
+            email: email.trim(),
+            password: password,
+            phone: phone.trim(),
+            address: address.trim(),
+            ...(age.trim() ? { age: Number(age) } : {}),
+            ...(gender.trim() ? { gender: gender.trim() } : {}),
+          };
 
       const res = await API.post(endpoint, payload);
 
@@ -67,17 +89,18 @@ function UserAuth({ initialMode = "login" }) {
       console.log("User token:", res.data?.token);
 
       if (isLogin) {
-        if (res.data?.status === "success") {
-          if (res.data?.token) localStorage.setItem("token", res.data.token);
-          if (res.data?.user) localStorage.setItem("user", JSON.stringify(res.data.user));
-          navigate("/");
-          return;
-        }
+  if (res.data?.status === "success") {
+    if (res.data?.token) localStorage.setItem("token", res.data.token);
+    if (res.data?.user) localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        alert("Invalid Login");
-        return;
-      }
+    // ✅ FIX: delay navigation
+    setTimeout(() => {
+      navigate("/user/profile");
+    }, 100);
 
+    return;
+  }
+}
       // Register endpoint returns the created user object (not {status:'success'})
       alert("Account Created ✅");
       setMode("login");
@@ -215,6 +238,88 @@ function UserAuth({ initialMode = "login" }) {
                 }}
               />
             </label>
+          )}
+
+          {!isLogin && (
+            <>
+              <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 14, color: "#111827" }}>Phone</span>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  type="tel"
+                  placeholder="Mobile number"
+                  style={{
+                    padding: "12px 14px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 10,
+                    outline: "none",
+                    fontSize: 14,
+                  }}
+                />
+              </label>
+
+              <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 14, color: "#111827" }}>Address</span>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Street, city, pincode"
+                  rows={3}
+                  style={{
+                    padding: "12px 14px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 10,
+                    outline: "none",
+                    fontSize: 14,
+                    resize: "vertical",
+                  }}
+                />
+              </label>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <span style={{ fontSize: 14, color: "#111827" }}>Age (optional)</span>
+                  <input
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    type="number"
+                    min={1}
+                    max={130}
+                    placeholder="—"
+                    style={{
+                      padding: "12px 14px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 10,
+                      outline: "none",
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <span style={{ fontSize: 14, color: "#111827" }}>Gender (optional)</span>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    style={{
+                      padding: "12px 14px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 10,
+                      outline: "none",
+                      fontSize: 14,
+                      background: "white",
+                    }}
+                  >
+                    <option value="">Prefer not to say</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="non-binary">Non-binary</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+              </div>
+            </>
           )}
 
           <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>

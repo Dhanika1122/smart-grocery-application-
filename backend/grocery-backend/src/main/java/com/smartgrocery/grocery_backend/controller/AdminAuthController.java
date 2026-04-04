@@ -1,5 +1,6 @@
 package com.smartgrocery.grocery_backend.controller;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -50,14 +51,18 @@ public class AdminAuthController {
         Map<String, Object> response = new HashMap<>();
 
         if (admin.isPresent() && isPasswordMatch(password, admin.get().getPassword())) {
+            Admin a = admin.get();
+            a.setLastLogin(LocalDateTime.now());
+            a = adminRepository.save(a);
+
             response.put("status", "success");
-            response.put("admin", admin.get());
+            response.put("admin", a);
 
             Map<String, Object> claims = new HashMap<>();
             claims.put("role", "ADMIN");
-            claims.put("adminId", admin.get().getId());
+            claims.put("adminId", a.getId());
 
-            String token = jwtService.generateToken(admin.get().getEmail(), claims);
+            String token = jwtService.generateToken(a.getEmail(), claims);
             response.put("token", token);
         } else {
             response.put("status", "error");

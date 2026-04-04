@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.smartgrocery.grocery_backend.model.Product;
 import com.smartgrocery.grocery_backend.model.SmartDietPlan;
+import com.smartgrocery.grocery_backend.model.SmartDietResponse;
+import com.smartgrocery.grocery_backend.model.AIStructuredResponse;
 import com.smartgrocery.grocery_backend.service.RecommendationService;
 
 @RestController
@@ -62,5 +64,16 @@ public List<String> getCartSuggestions(@RequestParam String product) {
     @GetMapping("/smart-diet-plan")
     public SmartDietPlan getSmartDietPlan(@RequestParam String input) {
         return recommendationService.getSmartDietPlan(input);
+    }
+
+    @GetMapping("/smart-diet-products")
+    public SmartDietResponse getSmartDietProducts(@RequestParam String input) {
+        return recommendationService.getSmartDietWithProducts(input);
+    }
+
+    // V2: strict structured response + DB-only products + fallbacks, optimized mapping
+    @GetMapping("/smart-diet-structured")
+    public AIStructuredResponse getSmartDietStructured(@RequestParam String input) {
+        return recommendationService.getSmartDietStructuredV2(input);
     }
 }

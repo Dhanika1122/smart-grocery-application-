@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/dhanika-logo.png";
 
 function Navbar() {
   const [showLogout, setShowLogout] = useState(() => {
@@ -8,6 +9,13 @@ function Navbar() {
     const user = localStorage.getItem("user");
 
     return Boolean(token && (admin || user));
+  });
+
+  const [showCustomerProfile, setShowCustomerProfile] = useState(() => {
+    const token = localStorage.getItem("token");
+    const admin = localStorage.getItem("admin");
+    const user = localStorage.getItem("user");
+    return Boolean(token && user && !admin);
   });
 
   const syncAuthState = () => {
@@ -21,10 +29,12 @@ function Navbar() {
       localStorage.removeItem("admin");
       localStorage.removeItem("user");
       setShowLogout(false);
+      setShowCustomerProfile(false);
       return;
     }
 
     setShowLogout(Boolean(token && (admin || user)));
+    setShowCustomerProfile(Boolean(token && user && !admin));
   };
 
   useEffect(() => {
@@ -40,6 +50,7 @@ function Navbar() {
     localStorage.removeItem("admin");
     localStorage.removeItem("user");
     setShowLogout(false);
+    setShowCustomerProfile(false);
 
     const path = window.location.pathname || "";
     if (path.startsWith("/admin")) {
@@ -64,9 +75,31 @@ function Navbar() {
       }}
     >
 
-      {/* Logo */}
-
-      <h2>FreshKart 🛒</h2>
+      <Link
+        to="/"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          textDecoration: "none",
+          color: "white",
+        }}
+      >
+       <div style={{ height: "60px", display: "flex", alignItems: "center" }}>
+  <img
+    src={logo}
+    alt="Dhanika"
+    style={{
+      height: "250%",
+      width: "auto",
+      objectFit: "contain"
+    }}
+  />
+</div>
+        <h2 style={{ margin: 0, fontSize: "2rem", fontWeight: 1000, letterSpacing: "-0.02em", color: "black" }}>
+          Dhanika
+        </h2>
+      </Link>
 
 
       {/* Navigation Links */}
@@ -96,6 +129,12 @@ Login
 <Link to="/register" style={{color:"white",textDecoration:"none"}}>
 Register
 </Link>
+
+        {showCustomerProfile && (
+          <Link to="/user/profile" style={{ color: "white", textDecoration: "none", fontWeight: 800 }}>
+            Profile
+          </Link>
+        )}
 
         {showLogout && (
           <button

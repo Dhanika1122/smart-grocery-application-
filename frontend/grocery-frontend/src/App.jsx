@@ -11,6 +11,7 @@ import AdminLogin from "./pages/AdminLogin";
 import UserLogin from "./pages/UserLogin";
 import UserRegister from "./pages/UserRegister";
 import AdminRegister from "./pages/AdminRegister";
+import UserProfile from "./pages/UserProfile";
 
 const AdminLayout = React.lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./pages/admin/Dashboard"));
@@ -18,6 +19,7 @@ const AdminSales = React.lazy(() => import("./pages/admin/Sales"));
 const AdminInventory = React.lazy(() => import("./pages/admin/Inventory"));
 const AdminCustomers = React.lazy(() => import("./pages/admin/Customers"));
 const AdminMarketing = React.lazy(() => import("./pages/admin/Marketing"));
+const AdminProfile = React.lazy(() => import("./pages/admin/AdminProfile"));
 
 function AppChrome() {
   const location = useLocation();
@@ -35,6 +37,7 @@ function AppChrome() {
         <Route path="/userlogin" element={<UserLogin />} />
         <Route path="/register" element={<UserRegister />} />
         <Route path="/admin-register" element={<AdminRegister />} />
+        <Route path="/user/profile" element={<UserProfile />} />
 
         <Route
           path="/admin"
@@ -85,6 +88,14 @@ function AppChrome() {
               </Suspense>
             }
           />
+          <Route
+            path="profile"
+            element={
+              <Suspense fallback={<div className="p-6">Loading profile…</div>}>
+                <AdminProfile />
+              </Suspense>
+            }
+          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -94,6 +105,10 @@ function AppChrome() {
 }
 
 function App() {
+
+  useEffect(() => {
+    document.title = "Dhanika";
+  }, []);
 
   useEffect(() => {
     const apply = () => {

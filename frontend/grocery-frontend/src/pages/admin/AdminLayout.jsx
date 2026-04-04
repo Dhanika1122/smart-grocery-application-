@@ -109,13 +109,14 @@ export default function AdminLayout() {
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-3 left-3 right-3 z-50">
         <Glass className="rounded-3xl px-3 py-2">
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {[
               { to: "/admin/dashboard", label: "Home" },
               { to: "/admin/sales", label: "Sales" },
               { to: "/admin/inventory", label: "Stock" },
               { to: "/admin/customers", label: "Users" },
               { to: "/admin/marketing", label: "Market" },
+              { to: "/admin/profile", label: "Profile" },
             ].map((x) => {
               const active = location.pathname === x.to;
               return (

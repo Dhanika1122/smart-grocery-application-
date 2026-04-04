@@ -1,5 +1,10 @@
 package com.smartgrocery.grocery_backend.model;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,9 +21,13 @@ public class Admin {
 
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private String shopName;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     // getters setters
     public Long getId() {
@@ -59,5 +68,13 @@ public class Admin {
 
     public void setShopName(String shopName) {
         this.shopName = shopName;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
 }

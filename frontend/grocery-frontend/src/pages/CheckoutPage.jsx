@@ -202,7 +202,7 @@ function CheckoutPage() {
                     Order placed successfully
                   </div>
                   <div className="mt-2 text-sm text-slate-600">
-                    Thanks for shopping with FreshKart.
+                    Thanks for shopping with Dhanika.
                   </div>
                 </div>
               </motion.div>

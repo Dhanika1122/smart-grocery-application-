@@ -27,8 +27,7 @@ function AdminLogin() {
     }
 
     if (token && adminRaw) {
-      // If already logged in, go straight to dashboard.
-      navigate("/admin");
+      navigate("/admin/profile");
     }
   }, [navigate]);
 
@@ -61,7 +60,7 @@ function AdminLogin() {
         localStorage.setItem("token", token);
         localStorage.setItem("admin", JSON.stringify(admin));
 
-        navigate("/admin");
+        navigate("/admin/profile");
         return;
       }
 

@@ -3,6 +3,7 @@
   import API from "../services/api";
   import OrderManagement from "../components/OrderManagement";
   import UserManagement from "../components/UserManagement";
+  import logo from "../assets/dhanika-logo.png";
 
   import {
     BarChart,
@@ -156,9 +157,10 @@ const res = await API.get(`/products?adminId=${admin.id}`);
         {/* SIDEBAR */}
         <div className="w-64 bg-white shadow-lg p-6">
 
-          <h2 className="text-2xl font-bold text-green-600 mb-8">
-            FreshKart
-          </h2>
+          <div className="flex items-center gap-3 mb-8">
+            <img src={logo} alt="Dhanika" className="h-12 w-auto object-contain" />
+            <h2 className="text-2xl font-bold text-green-600 m-0">Dhanika</h2>
+          </div>
 
           <ul className="space-y-4">
             <li className="bg-green-100 p-3 rounded-lg">Dashboard</li>

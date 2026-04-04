@@ -1,62 +1,31 @@
-package com.smartgrocery.grocery_backend.model;
+package com.smartgrocery.grocery_backend.dto;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+public class UserProfileResponse {
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-
-@Entity
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
     private String email;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;
-
     private String phone;
-
-    @Column(length = 1024)
     private String address;
-
     private Integer age;
-
     private String gender;
-
-    @Column(name = "created_at")
+    private String role;
     private LocalDateTime createdAt;
-
-    /** Public URL path served under /uploads/profile/ (e.g. /uploads/profile/uuid.jpg) */
-    @Column(name = "profile_image", length = 512)
+    /** Public path for profile photo (e.g. /uploads/profile/uuid.jpg) */
     private String profileImage;
-
-    @PrePersist
-    void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
 
     public Long getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void setName(String name) {
@@ -69,14 +38,6 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getPhone() {
@@ -111,6 +72,14 @@ public class User {
         this.gender = gender;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -126,5 +95,4 @@ public class User {
     public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
-
 }

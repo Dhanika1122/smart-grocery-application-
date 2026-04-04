@@ -39,8 +39,10 @@ public class JwtFilter extends OncePerRequestFilter {
         String servletPath = request.getServletPath();
         if ("/auth/login".equals(servletPath)
                 || "/auth/register".equals(servletPath)
+                || "/auth/forgot-password".equals(servletPath)
                 || "/userauth/login".equals(servletPath)
-                || "/userauth/register".equals(servletPath)) {
+                || "/userauth/register".equals(servletPath)
+                || "/userauth/forgot-password".equals(servletPath)) {
             filterChain.doFilter(request, response);
             return;
         }

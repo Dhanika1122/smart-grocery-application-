@@ -1,6 +1,7 @@
 package com.smartgrocery.grocery_backend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,6 +43,13 @@ public class CartController {
     @DeleteMapping("/{id}")
     public void deleteItem(@PathVariable Long id) {
         cartService.removeItem(id);
+    }
+
+    // Backward/alternate route expected by frontend: /cart/remove/{id}
+    @DeleteMapping("/remove/{id}")
+    public Map<String, Object> deleteItemV2(@PathVariable Long id) {
+        cartService.removeItem(id);
+        return Map.of("status", "success", "id", id);
     }
 
     @PutMapping("/{id}")

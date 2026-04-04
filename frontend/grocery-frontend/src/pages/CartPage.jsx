@@ -7,6 +7,7 @@ function CartPage() {
   const [products, setProducts] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [coupon, setCoupon] = useState("");
+  const [removingId, setRemovingId] = useState(null);
 
   // Load cart + products
   useEffect(() => {
@@ -52,20 +53,18 @@ function CartPage() {
 }, [cartItems, products]);
 
   // Remove item
-  const removeItem = async (id) => {
-
+  const handleRemove = async (id) => {
+    if (!id) return;
+    setRemovingId(id);
     try {
-
-      await API.delete(`/cart/${id}`);
-
-      setCartItems(cartItems.filter(item => item.id !== id));
-
+      await API.delete(`/cart/remove/${id}`);
+      setCartItems((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
-
       console.log(err);
-
+      alert(err?.response?.data?.message || "Failed to remove item");
+    } finally {
+      setRemovingId((prev) => (prev === id ? null : prev));
     }
-
   };
 
   // Increase quantity
@@ -222,10 +221,11 @@ function CartPage() {
               </p>
 
             <button
-              onClick={() => removeItem(item.id)}
-                className="text-red-500 text-sm mt-2"
+              onClick={() => handleRemove(item.id)}
+              disabled={removingId === item.id}
+              className={`text-red-500 text-sm mt-2 ${removingId === item.id ? "opacity-60 cursor-not-allowed" : ""}`}
             >
-              Remove
+              {removingId === item.id ? "Removing..." : "Remove"}
             </button>
 
           </div>

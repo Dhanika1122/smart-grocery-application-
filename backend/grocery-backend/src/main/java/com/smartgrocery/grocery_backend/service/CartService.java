@@ -6,6 +6,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartgrocery.grocery_backend.model.CartItem;
 import com.smartgrocery.grocery_backend.model.User;
@@ -42,6 +43,7 @@ public class CartService {
     }
 
     // Remove item from cart
+    @Transactional
     public void removeItem(Long id) {
         Long authenticatedUserId = getAuthenticatedUserIdOrNull();
         if (authenticatedUserId == null) {

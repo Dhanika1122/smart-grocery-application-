@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
+import logo from "../../assets/dhanika-logo.png";
 import {
-  BarChart3,
   Boxes,
   LayoutDashboard,
   LineChart,
@@ -10,6 +10,7 @@ import {
   Moon,
   Sun,
   Users,
+  UserCircle2,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const nav = [
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/marketing", label: "Marketing", icon: Megaphone },
+  { to: "/admin/profile", label: "Profile", icon: UserCircle2 },
 ];
 
 function Glass({ className = "", children }) {
@@ -45,13 +47,13 @@ export default function Sidebar({ theme, setTheme }) {
     <aside className={`hidden md:flex flex-col ${width} transition-[width] duration-300`}>
       <Glass className="rounded-3xl p-4 h-[calc(100vh-24px)] sticky top-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-500/35 via-white/10 to-amber-200/35 border border-white/30 flex items-center justify-center">
-              <BarChart3 className="text-emerald-700 dark:text-emerald-300" size={18} />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-10 w-10 shrink-0 rounded-2xl bg-white/80 dark:bg-white/10 border border-white/30 flex items-center justify-center overflow-hidden p-1">
+              <img src={logo} alt="" className="max-h-full max-w-full object-contain" />
             </div>
             {!collapsed && (
-              <div className="leading-tight">
-                <div className="font-extrabold tracking-tight text-slate-900 dark:text-white">FreshKart</div>
+              <div className="leading-tight min-w-0">
+                <div className="font-extrabold tracking-tight text-slate-900 dark:text-white">Dhanika</div>
                 <div className="text-xs text-slate-600/80 dark:text-white/60">Admin Analytics</div>
               </div>
             )}
