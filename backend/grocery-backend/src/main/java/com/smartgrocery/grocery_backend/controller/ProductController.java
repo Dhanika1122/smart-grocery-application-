@@ -18,7 +18,7 @@ import com.smartgrocery.grocery_backend.service.ProductService;
 
 @RestController
 @RequestMapping("/products")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:5173")
 public class ProductController {
 
     private final ProductService productService;

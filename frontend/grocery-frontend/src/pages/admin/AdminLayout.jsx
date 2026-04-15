@@ -112,6 +112,7 @@ export default function AdminLayout() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { to: "/admin/dashboard", label: "Home" },
+              { to: "/admin/orders", label: "Orders" },
               { to: "/admin/sales", label: "Sales" },
               { to: "/admin/inventory", label: "Stock" },
               { to: "/admin/customers", label: "Users" },

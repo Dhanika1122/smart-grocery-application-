@@ -1,200 +1,359 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
-function OrderManagement() {
+const STATUS_OPTIONS = ["PENDING", "DELIVERED", "CANCELLED"];
 
+const badgeStyles = {
+  PENDING: {
+    icon: "⏳",
+    label: "Pending",
+    background: "#fef3c7",
+    color: "#92400e",
+    border: "#f59e0b",
+  },
+  DELIVERED: {
+    icon: "✅",
+    label: "Delivered",
+    background: "#dcfce7",
+    color: "#166534",
+    border: "#22c55e",
+  },
+  CANCELLED: {
+    icon: "❌",
+    label: "Cancelled",
+    background: "#fee2e2",
+    color: "#991b1b",
+    border: "#ef4444",
+  },
+};
+
+function StatusBadge({ status }) {
+  const config = badgeStyles[status] ?? badgeStyles.PENDING;
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "7px 12px",
+        borderRadius: "999px",
+        background: config.background,
+        color: config.color,
+        border: `1px solid ${config.border}`,
+        fontWeight: 800,
+        fontSize: "13px",
+      }}
+    >
+      <span>{config.icon}</span>
+      <span>{config.label}</span>
+    </span>
+  );
+}
+
+function OrderManagement() {
   const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState({});
-  const [filter, setFilter] = useState("today");
+  const [loading, setLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState("week");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedDate, setSelectedDate] = useState("");
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
   useEffect(() => {
-    fetchProducts();
     fetchOrders();
-  }, [filter, selectedDate]);
+  }, []);
 
-  // ✅ Fetch all products and map by ID
-  const fetchProducts = async () => {
-    const res = await API.get("/products");
-
-    const map = {};
-    res.data.forEach(p => {
-      map[p.id] = p;
-    });
-
-    setProducts(map);
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get("/api/orders");
+      setOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Failed to fetch admin orders:", error);
+      alert(error?.response?.data?.message || "Failed to load orders");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ✅ Fetch orders
-  const fetchOrders = async () => {
-    const res = await API.get("/orders");
-
-    let filtered = res.data;
-
+  const filteredOrders = useMemo(() => {
+    let filtered = [...orders];
     const today = new Date();
 
-    if (filter === "today") {
-      filtered = res.data.filter(o => {
-        const orderDate = new Date(o.createdAt);
+    if (statusFilter !== "ALL") {
+      filtered = filtered.filter((order) => (order.status || "").toUpperCase() === statusFilter);
+    }
+
+    if (dateFilter === "today") {
+      filtered = filtered.filter((order) => {
+        const orderDate = new Date(order.createdAt);
         return orderDate.toDateString() === today.toDateString();
       });
     }
 
-    if (filter === "date" && selectedDate) {
-      filtered = res.data.filter(o => {
-        const orderDate = new Date(o.createdAt).toISOString().split("T")[0];
+    if (dateFilter === "date" && selectedDate) {
+      filtered = filtered.filter((order) => {
+        const orderDate = new Date(order.createdAt).toISOString().split("T")[0];
         return orderDate === selectedDate;
       });
     }
 
-    if (filter === "week") {
+    if (dateFilter === "week") {
       const weekStart = new Date();
       weekStart.setDate(today.getDate() - 7);
 
-      filtered = res.data.filter(o => {
-        const orderDate = new Date(o.createdAt);
+      filtered = filtered.filter((order) => {
+        const orderDate = new Date(order.createdAt);
         return orderDate >= weekStart && orderDate <= today;
       });
     }
 
-    setOrders(filtered);
-  };
+    return filtered;
+  }, [orders, dateFilter, selectedDate, statusFilter]);
 
-  // ✅ Update status
-  const updateStatus = async (id, status) => {
-    await API.put(`/orders/${id}/status?status=${status}`);
-    fetchOrders();
+  const updateStatus = async (orderId, nextStatus) => {
+    const currentOrder = orders.find((order) => order.orderId === orderId);
+    const currentStatus = (currentOrder?.status || "PENDING").toUpperCase();
+
+    if (currentStatus === nextStatus) {
+      return;
+    }
+
+    if (nextStatus === "CANCELLED") {
+      const confirmed = window.confirm("Are you sure you want to mark this order as CANCELLED?");
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setUpdatingOrderId(orderId);
+    try {
+      const res = await API.put(`/api/orders/${orderId}/status`, { status: nextStatus });
+      const updatedOrder = res.data;
+      setOrders((prev) =>
+        prev.map((order) => (order.orderId === orderId ? updatedOrder : order))
+      );
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+      alert(error?.response?.data?.message || "Failed to update order status");
+    } finally {
+      setUpdatingOrderId(null);
+    }
   };
 
   return (
+    <div
+      style={{
+        marginTop: "40px",
+        background: "#ffffff",
+        borderRadius: "24px",
+        padding: "24px",
+        boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h2 style={{ margin: 0, color: "#0f172a" }}>Customer Orders</h2>
+          <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+            Review incoming orders, mark completed deliveries, and cancel when needed.
+          </p>
+        </div>
 
-    <div style={{ marginTop: "40px" }}>
-
-      <h2>Customer Orders 📦</h2>
-
-      {/* 🔽 FILTER OPTIONS */}
-      <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-
-        <button onClick={() => setFilter("today")}>
-          Today
+        <button onClick={fetchOrders} style={primaryButtonStyle}>
+          Refresh Orders
         </button>
+      </div>
 
-        <button onClick={() => setFilter("week")} style={{ marginLeft: "10px" }}>
-          Week
-        </button>
+      <div
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "12px",
+          alignItems: "center",
+        }}
+      >
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="ALL">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="DELIVERED">Delivered</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
 
-        <button onClick={() => setFilter("date")} style={{ marginLeft: "10px" }}>
-          Select Date
-        </button>
+        <button onClick={() => setDateFilter("all")} style={filterButtonStyle}>All Dates</button>
+        <button onClick={() => setDateFilter("today")} style={filterButtonStyle}>Today</button>
+        <button onClick={() => setDateFilter("week")} style={filterButtonStyle}>Week</button>
+        <button onClick={() => setDateFilter("date")} style={filterButtonStyle}>Select Date</button>
 
-        {filter === "date" && (
+        {dateFilter === "date" && (
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ marginLeft: "10px" }}
+            style={selectStyle}
           />
         )}
-
       </div>
 
-      {/* ❌ NO ORDERS MESSAGE */}
-      {orders.length === 0 && (
-        <p style={{ color: "red" }}>
-          Sorry, no orders found for selected filter
+      {loading && (
+        <p style={{ marginTop: "24px", color: "#64748b", fontWeight: 700 }}>Loading orders...</p>
+      )}
+
+      {!loading && filteredOrders.length === 0 && (
+        <p style={{ marginTop: "24px", color: "#b91c1c", fontWeight: 700 }}>
+          No orders found for the selected filters.
         </p>
       )}
 
-      {/* ✅ TABLE */}
-      {orders.length > 0 && (
-      <table style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          marginTop: "20px"
-      }}>
-
-        <thead>
-            <tr style={{ background: "#f3f4f6" }}>
-              <th style={{ padding: "10px" }}>Order ID</th>
-              <th style={{ padding: "10px" }}>Product</th>
-              <th style={{ padding: "10px" }}>Quantity</th>
-              <th style={{ padding: "10px" }}>Total</th>
-              <th style={{ padding: "10px" }}>Status</th>
-              <th style={{ padding: "10px" }}>Update</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-            {orders.map((o) => {
-
-              const product = products[o.productId];
-
-              return (
-                <tr key={o.id} style={{ borderBottom: "1px solid #eee" }}>
-
-                  <td style={{ padding: "10px" }}>{o.id}</td>
-
-                  {/* ✅ PRODUCT IMAGE */}
-                  <td style={{ padding: "10px" }}>
-                    {product ? (
-                      <img
-                        src={product.image}
-                        alt=""
-                        style={{ width: "50px", height: "50px", borderRadius: "6px" }}
-                      />
-                    ) : (
-                      "No Image"
-                    )}
+      {!loading && filteredOrders.length > 0 && (
+        <div style={{ overflowX: "auto", marginTop: "24px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              minWidth: "920px",
+            }}
+          >
+            <thead>
+              <tr style={{ background: "#f8fafc" }}>
+                <th style={headerCellStyle}>Order ID</th>
+                <th style={headerCellStyle}>User ID</th>
+                <th style={headerCellStyle}>Products</th>
+                <th style={headerCellStyle}>Total</th>
+                <th style={headerCellStyle}>Status</th>
+                <th style={headerCellStyle}>Update</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map((order) => (
+                <tr key={order.orderId} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                  <td style={bodyCellStyle}>#{order.orderId}</td>
+                  <td style={bodyCellStyle}>{order.userId ?? "-"}</td>
+                  <td style={bodyCellStyle}>
+                    {(order.products || []).map((product) => (
+                      <div
+                        key={`${order.orderId}-${product.productId}`}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            style={{
+                              width: "52px",
+                              height: "52px",
+                              borderRadius: "10px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "52px",
+                              height: "52px",
+                              borderRadius: "10px",
+                              background: "#e2e8f0",
+                            }}
+                          />
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 700, color: "#0f172a" }}>{product.name}</div>
+                          <div style={{ color: "#64748b", fontSize: "14px" }}>
+                            Qty: {product.quantity} | Price: Rs.{product.price}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </td>
-
-                  <td style={{ padding: "10px" }}>{o.quantity}</td>
-                  <td style={{ padding: "10px" }}>₹{o.totalPrice}</td>
-                  <td style={{ padding: "10px" }}>{o.status}</td>
-
-                  <td style={{ padding: "10px" }}>
-
-                <button
-                      onClick={() => updateStatus(o.id, "Packed")}
-                style={{
-                        background: "#f59e0b",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 10px",
-                        borderRadius: "6px",
-                        marginRight: "5px"
-                }}
-                >
-                Packed
-                </button>
-
-                <button
-                      onClick={() => updateStatus(o.id, "Delivered")}
-                style={{
-                        background: "#16a34a",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 10px",
-                        borderRadius: "6px"
-                }}
-                >
-                Delivered
-                </button>
-
-              </td>
-
-            </tr>
-              );
-            })}
-
-        </tbody>
-
-      </table>
+                  <td style={bodyCellStyle}>Rs.{order.totalAmount}</td>
+                  <td style={bodyCellStyle}>
+                    <StatusBadge status={(order.status || "PENDING").toUpperCase()} />
+                  </td>
+                  <td style={bodyCellStyle}>
+                    <select
+                      value={(order.status || "PENDING").toUpperCase()}
+                      onChange={(e) => updateStatus(order.orderId, e.target.value)}
+                      disabled={updatingOrderId === order.orderId}
+                      style={selectStyle}
+                    >
+                      {STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {badgeStyles[status].label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-
     </div>
-
   );
 }
+
+const primaryButtonStyle = {
+  border: "none",
+  background: "#16a34a",
+  color: "#ffffff",
+  borderRadius: "12px",
+  padding: "10px 16px",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const filterButtonStyle = {
+  border: "1px solid #cbd5e1",
+  background: "#ffffff",
+  color: "#0f172a",
+  borderRadius: "12px",
+  padding: "10px 14px",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const selectStyle = {
+  padding: "10px 12px",
+  borderRadius: "12px",
+  border: "1px solid #cbd5e1",
+  background: "#ffffff",
+  fontWeight: 700,
+  minWidth: "150px",
+};
+
+const headerCellStyle = {
+  padding: "14px 12px",
+  textAlign: "left",
+  color: "#334155",
+  fontWeight: 800,
+  fontSize: "13px",
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+};
+
+const bodyCellStyle = {
+  padding: "16px 12px",
+  verticalAlign: "top",
+  color: "#0f172a",
+  fontWeight: 600,
+};
 
 export default OrderManagement;

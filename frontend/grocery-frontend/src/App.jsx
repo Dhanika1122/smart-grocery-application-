@@ -1,5 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Navbar from "./components/Navbar";
 import ProductPage from "./pages/ProductPage";
@@ -15,6 +17,7 @@ import UserProfile from "./pages/UserProfile";
 
 const AdminLayout = React.lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./pages/admin/Dashboard"));
+const AdminOrders = React.lazy(() => import("./pages/admin/Orders"));
 const AdminSales = React.lazy(() => import("./pages/admin/Sales"));
 const AdminInventory = React.lazy(() => import("./pages/admin/Inventory"));
 const AdminCustomers = React.lazy(() => import("./pages/admin/Customers"));
@@ -53,6 +56,14 @@ function AppChrome() {
             element={
               <Suspense fallback={<div className="p-6">Loading dashboard…</div>}>
                 <AdminDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <Suspense fallback={<div className="p-6">Loading orders...</div>}>
+                <AdminOrders />
               </Suspense>
             }
           />
@@ -136,6 +147,7 @@ function App() {
   return (
 
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
       <AppChrome />
 
     </BrowserRouter>
