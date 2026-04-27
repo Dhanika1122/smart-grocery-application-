@@ -11,7 +11,7 @@ import com.smartgrocery.grocery_backend.service.AdminProfileService;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AdminProfileController {
 
     @Autowired

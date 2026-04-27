@@ -24,6 +24,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
 
         http
+            .cors(org.springframework.security.config.Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(e -> e.authenticationEntryPoint((request, response, authException) -> {
@@ -51,7 +52,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("ADMIN")
                     // Orders can be viewed by either admin or customer (tenant isolation in controller)
                     .requestMatchers(HttpMethod.GET, "/orders").hasAnyRole("ADMIN", "CUSTOMER")
-                    .requestMatchers(HttpMethod.PUT, "/orders/*/status").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/orders/*/status").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/api/user/profile").hasRole("CUSTOMER")
                     .requestMatchers(HttpMethod.PUT, "/api/user/profile").hasRole("CUSTOMER")

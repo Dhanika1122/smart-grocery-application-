@@ -20,7 +20,7 @@ import com.smartgrocery.grocery_backend.repository.AdminRepository;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AdminAuthController {
 
     @Autowired

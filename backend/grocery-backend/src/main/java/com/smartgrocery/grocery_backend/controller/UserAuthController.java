@@ -19,7 +19,7 @@ import com.smartgrocery.grocery_backend.repository.UserRepository;
 
 @RestController
 @RequestMapping("/userauth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserAuthController {
 
     @Autowired

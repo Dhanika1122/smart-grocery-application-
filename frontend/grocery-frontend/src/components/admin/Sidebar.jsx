@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import logo from "../../assets/dhanika-logo.png";
 import {
   Boxes,
+  ClipboardList,
   LayoutDashboard,
   LineChart,
   Megaphone,
@@ -17,6 +18,7 @@ import {
 
 const nav = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/orders", label: "Orders", icon: ClipboardList },
   { to: "/admin/sales", label: "Sales", icon: LineChart },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
   { to: "/admin/customers", label: "Customers", icon: Users },

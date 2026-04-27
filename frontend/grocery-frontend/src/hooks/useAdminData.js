@@ -24,7 +24,7 @@ export function useAdminData({ filter }) {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const [o, p, u] = await Promise.all([API.get("/orders"), API.get("/products"), API.get("/users")]);
+      const [o, p, u] = await Promise.all([API.get("/api/orders"), API.get("/products"), API.get("/users")]);
       if (!aliveRef.current) return;
       setOrders(Array.isArray(o.data) ? o.data : []);
       setProducts(Array.isArray(p.data) ? p.data : []);
@@ -79,9 +79,9 @@ export function useAdminData({ filter }) {
 
   const kpis = useMemo(() => {
     const totalOrders = currentOrders.length;
-    const revenue = sum(currentOrders, (o) => o.totalPrice);
+    const revenue = sum(currentOrders, (o) => o.totalAmount);
     const prevOrders = previousOrders.length;
-    const prevRevenue = sum(previousOrders, (o) => o.totalPrice);
+    const prevRevenue = sum(previousOrders, (o) => o.totalAmount);
 
     const ordersChange = prevOrders ? ((totalOrders - prevOrders) / prevOrders) * 100 : totalOrders ? 100 : 0;
     const revenueChange = prevRevenue ? ((revenue - prevRevenue) / prevRevenue) * 100 : revenue ? 100 : 0;
@@ -119,7 +119,7 @@ export function useAdminData({ filter }) {
       const i = idx.get(key);
       if (i == null) continue;
       rows[i].orders += 1;
-      rows[i].revenue += safeNum(o.totalPrice);
+      rows[i].revenue += safeNum(o.totalAmount);
     }
     return rows;
   }, [ordersWithDate]);
@@ -131,7 +131,7 @@ export function useAdminData({ filter }) {
       const key = dayKey(o.__dt);
       const cur = bucket.get(key) ?? { day: key, revenue: 0, orders: 0 };
       cur.orders += 1;
-      cur.revenue += safeNum(o.totalPrice);
+      cur.revenue += safeNum(o.totalAmount);
       bucket.set(key, cur);
     }
     return Array.from(bucket.values()).sort((a, b) => (a.day < b.day ? -1 : 1));
@@ -141,9 +141,11 @@ export function useAdminData({ filter }) {
     // Pie: revenue by product category (current range)
     const bucket = new Map();
     for (const o of currentOrders) {
-      const p = productById.get(o.productId);
-      const cat = (p?.category || "Other").trim() || "Other";
-      bucket.set(cat, (bucket.get(cat) ?? 0) + safeNum(o.totalPrice));
+      for (const item of o.products || []) {
+        const p = productById.get(item.productId);
+        const cat = (p?.category || "Other").trim() || "Other";
+        bucket.set(cat, (bucket.get(cat) ?? 0) + safeNum(item.price) * safeNum(item.quantity));
+      }
     }
     return Array.from(bucket.entries())
       .map(([name, value]) => ({ name, value }))
@@ -166,7 +168,7 @@ export function useAdminData({ filter }) {
       if (uid == null) continue;
       const cur = bucket.get(uid) ?? { userId: uid, orders: 0, spending: 0 };
       cur.orders += 1;
-      cur.spending += safeNum(o.totalPrice);
+      cur.spending += safeNum(o.totalAmount);
       bucket.set(uid, cur);
     }
     const enriched = users.map((u) => {
@@ -185,10 +187,12 @@ export function useAdminData({ filter }) {
     // Best sellers by revenue & units (current range)
     const bucket = new Map();
     for (const o of currentOrders) {
-      const cur = bucket.get(o.productId) ?? { productId: o.productId, units: 0, revenue: 0 };
-      cur.units += safeNum(o.quantity);
-      cur.revenue += safeNum(o.totalPrice);
-      bucket.set(o.productId, cur);
+      for (const item of o.products || []) {
+        const cur = bucket.get(item.productId) ?? { productId: item.productId, units: 0, revenue: 0 };
+        cur.units += safeNum(item.quantity);
+        cur.revenue += safeNum(item.price) * safeNum(item.quantity);
+        bucket.set(item.productId, cur);
+      }
     }
     return Array.from(bucket.values())
       .map((x) => ({ ...x, product: productById.get(x.productId) }))
@@ -198,12 +202,14 @@ export function useAdminData({ filter }) {
   const marketing = useMemo(() => {
     // Real metrics we can compute without extra backend endpoints
     const delivered = currentOrders.filter((o) => (o.status || "").toLowerCase() === "delivered").length;
+    const outForDelivery = currentOrders.filter((o) => (o.status || "").toLowerCase() === "out_for_delivery").length;
+    const cancelled = currentOrders.filter((o) => (o.status || "").toLowerCase() === "cancelled").length;
     const pending = currentOrders.filter((o) => (o.status || "").toLowerCase() === "pending").length;
-    const packed = currentOrders.filter((o) => (o.status || "").toLowerCase() === "packed").length;
 
     const orderStatus = [
       { name: "Delivered", value: delivered },
-      { name: "Packed", value: packed },
+      { name: "Out for delivery", value: outForDelivery },
+      { name: "Cancelled", value: cancelled },
       { name: "Pending", value: pending },
     ].filter((x) => x.value > 0);
 

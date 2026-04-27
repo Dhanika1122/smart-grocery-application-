@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environmental Variables ###
+.env
+.env.*
+*.env
+
+### Secret Configuration ###
+application-secret.properties
+application-dev.properties

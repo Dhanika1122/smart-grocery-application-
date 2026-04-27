@@ -22,7 +22,7 @@ import com.smartgrocery.grocery_backend.service.UserProfileService;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserProfileController {
 
     @Autowired

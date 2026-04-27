@@ -1,47 +1,61 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
 
 function SearchBar({ search, setSearch }) {
-  const [focused, setFocused] = useState(false);
-
   return (
     <motion.div
-      initial={false}
-      animate={{
-        scale: focused ? 1.01 : 1,
-      }}
-      transition={{ type: "spring", stiffness: 240, damping: 18 }}
-      className="relative mb-6"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-6 flex justify-center"
     >
-      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-        <Search size={18} className="text-slate-500" />
-      </div>
-
-      <input
-        type="text"
-        placeholder="Search groceries..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        className="w-full rounded-3xl border border-white/80 bg-white/70 backdrop-blur-xl
-          pl-11 pr-4 py-3 text-sm md:text-[15px] font-medium text-slate-900
-          shadow-[0_10px_30px_rgba(0,0,0,0.06)]
-          focus:outline-none focus:ring-2 focus:ring-emerald-300/60"
-      />
-
       <div
-        className="pointer-events-none absolute -inset-0.5 rounded-3xl opacity-0 hover:opacity-100 transition"
-        style={{
-          background:
-            "linear-gradient(120deg, rgba(16,185,129,0.25), rgba(250,204,21,0.18))",
-          filter: "blur(10px)",
-        }}
-      />
+        className="flex items-center gap-2 px-4 py-2
+        w-full max-w-md   /* 👈 controls width */
+        rounded-full      /* 👈 pill shape */
+        bg-white/70 backdrop-blur-lg
+        border border-white/80
+        shadow-md
+        focus-within:shadow-lg
+        transition"
+      >
+        {/* 🔍 Icon */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-slate-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-4.3-4.3m1.8-5.2a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+
+        {/* Input */}
+        <input
+          type="text"
+          placeholder="Search groceries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 bg-transparent outline-none
+          text-sm text-slate-800 placeholder:text-slate-400"
+        />
+
+        {/* ❌ Clear */}
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="text-xs text-slate-400 hover:text-red-500"
+          >
+            ✕
+          </button>
+        )}
+      </div>
     </motion.div>
   );
 }
 
 export default SearchBar;
-

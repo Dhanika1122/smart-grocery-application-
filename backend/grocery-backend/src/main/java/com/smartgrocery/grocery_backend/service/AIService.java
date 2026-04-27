@@ -31,7 +31,7 @@ public class AIService {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${openai.api-key:}")
+    @Value("${openai.api.key:}")
     private String openaiApiKey;
 
     @Value("${openai.model:gpt-4o-mini}")
