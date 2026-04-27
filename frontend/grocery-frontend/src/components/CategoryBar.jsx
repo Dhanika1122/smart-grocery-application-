@@ -1,51 +1,71 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { ChevronRight } from "lucide-react";
 
 const categories = [
-  { name: "All", icon: "🛒" },
+  { name: "All Categories", icon: "🟢" },
   { name: "Fruits", icon: "🍎" },
   { name: "Vegetables", icon: "🥦" },
   { name: "Dairy", icon: "🥛" },
-  { name: "Bakery", icon: "🍞" },
+  { name: "Bakery", icon: "🥐" },
   { name: "Meat", icon: "🍗" },
   { name: "Drinks", icon: "🥤" },
+  { name: "Organic", icon: "🍃" },
 ];
 
 function CategoryBar({ setCategory }) {
+  const [active, setActive] = useState("All Categories");
+
+  const handleClick = (cat) => {
+    setActive(cat);
+    setCategory(cat);
+  };
+
   return (
-    <div className="mb-7">
-      <div className="px-1 mb-3 flex items-end justify-between">
-        <div className="text-sm font-semibold text-slate-700">
-          Categories
-        </div>
-        <div className="text-xs text-slate-500">Swipe</div>
+    <div className="mb-10">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5 px-1">
+        <h2 className="text-lg font-semibold text-gray-800">
+          Shop by Category
+        </h2>
+        <button className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1">
+          View all categories <ChevronRight size={16} />
+        </button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-        {categories.map((cat) => (
-          <motion.button
-            key={cat.name}
-            type="button"
-            onClick={() => setCategory(cat.name)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            className="snap-start relative min-w-[110px] px-4 py-3 rounded-2xl
-              bg-white/75 backdrop-blur-xl border border-white/80
-              shadow-[0_10px_30px_rgba(0,0,0,0.06)]
-              hover:shadow-[0_18px_45px_rgba(0,0,0,0.12)]
-              transition"
+      {/* Categories Row */}
+      <div className="flex gap-4 overflow-x-auto pb-3">
+        {categories.map((cat, index) => (
+          <motion.div
+            key={index}
+            onClick={() => handleClick(cat.name)}
+            whileHover={{ y: -4, scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            className={`min-w-[130px] cursor-pointer rounded-2xl p-4 transition-all
+              ${
+                active === cat.name
+                  ? "bg-white shadow-xl border border-gray-200"
+                  : "bg-gray-50 hover:bg-white border border-transparent"
+              }`}
           >
-            <div className="text-2xl text-center">{cat.icon}</div>
-            <div className="mt-2 text-xs font-semibold text-slate-800 text-center">
-              {cat.name}
+            {/* Icon Circle */}
+            <div
+              className={`w-14 h-14 mx-auto flex items-center justify-center rounded-full text-2xl
+                ${
+                  active === cat.name
+                    ? "bg-green-100"
+                    : "bg-gray-100"
+                }`}
+            >
+              {cat.icon}
             </div>
 
-            <div
-              className="pointer-events-none absolute inset-0 rounded-2xl opacity-0
-                group-hover:opacity-100 transition
-                bg-gradient-to-r from-emerald-400/40 via-emerald-200/30 to-amber-200/35"
-            />
-          </motion.button>
+            {/* Text */}
+            <div className="mt-3 text-center text-sm font-medium text-gray-700 flex items-center justify-center gap-1">
+              {cat.name !== "All Categories" ? cat.name : "All"}
+              <ChevronRight size={14} className="text-gray-400" />
+            </div>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -53,4 +73,3 @@ function CategoryBar({ setCategory }) {
 }
 
 export default CategoryBar;
-
