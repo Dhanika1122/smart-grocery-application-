@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
+import { MapPin, Plus, Trash2, Edit2, Home, Briefcase, Store } from "lucide-react";
+import DeliveryMapPicker from "../components/DeliveryMapPicker";
 
 function formatDate(value) {
   if (!value) return "—";
@@ -56,6 +58,11 @@ export default function UserProfile() {
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState("");
 
+  // Saved Locations state
+  const [locations, setLocations] = useState([]);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -67,15 +74,19 @@ export default function UserProfile() {
   const loadProfile = useCallback(async () => {
     setError("");
     try {
-      const res = await API.get("/api/user/profile");
-      setProfile(res.data);
-      mergeStoredUser(res.data);
+      const [profRes, locsRes] = await Promise.all([
+        API.get("/api/user/profile"),
+        API.get("/api/locations").catch(() => ({ data: [] })),
+      ]);
+      setProfile(profRes.data);
+      setLocations(locsRes.data || []);
+      mergeStoredUser(profRes.data);
       setForm({
-        name: res.data?.name ?? "",
-        phone: res.data?.phone ?? "",
-        address: res.data?.address ?? "",
-        age: res.data?.age != null ? String(res.data.age) : "",
-        gender: res.data?.gender ?? "",
+        name: profRes.data?.name ?? "",
+        phone: profRes.data?.phone ?? "",
+        address: profRes.data?.address ?? "",
+        age: profRes.data?.age != null ? String(profRes.data.age) : "",
+        gender: profRes.data?.gender ?? "",
       });
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || "Could not load profile");
@@ -193,6 +204,43 @@ export default function UserProfile() {
     }
   };
 
+  const handleOpenAddLocation = () => {
+    setEditingLocation(null);
+    setShowLocationModal(true);
+  };
+
+  const handleOpenEditLocation = (loc) => {
+    setEditingLocation(loc);
+    setShowLocationModal(true);
+  };
+
+  const handleSaveLocationFromMap = async (locData) => {
+    try {
+      if (editingLocation) {
+        await API.put(`/api/locations/${editingLocation.id}`, locData);
+        showToast("Location updated successfully");
+      } else {
+        await API.post("/api/locations", locData);
+        showToast("New delivery location saved");
+      }
+      setShowLocationModal(false);
+      loadProfile();
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to save location");
+    }
+  };
+
+  const handleDeleteLocation = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this saved location?")) return;
+    try {
+      await API.delete(`/api/locations/${id}`);
+      showToast("Location deleted");
+      loadProfile();
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to delete location");
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -206,8 +254,8 @@ export default function UserProfile() {
     <div className="min-h-screen px-4 py-10 flex items-start justify-center bg-[var(--bg0)]">
       <div className="absolute inset-0 -z-10 noise opacity-40" />
 
-      <div className="w-full max-w-lg">
-        <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="w-full max-w-lg space-y-6">
+        <div className="flex items-center justify-between gap-3">
           <Link
             to="/"
             className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300 hover:underline"
@@ -216,6 +264,7 @@ export default function UserProfile() {
           </Link>
         </div>
 
+        {/* Profile Details Box */}
         <div className="rounded-3xl border border-[var(--cardBorder)] bg-[var(--card)] backdrop-blur-xl shadow-[var(--shadow)] p-6 md:p-8">
           <div className="flex flex-col items-center mb-6">
             <button
@@ -307,18 +356,6 @@ export default function UserProfile() {
             </div>
           )}
 
-          {!loading && error && !profile && (
-            <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-800 dark:text-rose-200">
-              {error}
-            </div>
-          )}
-
-          {!loading && profile && error && (
-            <div className="mb-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-800 dark:text-rose-200">
-              {error}
-            </div>
-          )}
-
           {!loading && profile && (
             <dl className="space-y-4">
               {editing ? (
@@ -349,52 +386,6 @@ export default function UserProfile() {
                       />
                     </dd>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                      Address
-                    </dt>
-                    <dd>
-                      <textarea
-                        value={form.address}
-                        onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                        rows={3}
-                        className="w-full rounded-2xl border border-white/60 dark:border-white/15 bg-white/60 dark:bg-white/5 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y min-h-[80px]"
-                      />
-                    </dd>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                      Age (optional)
-                    </dt>
-                    <dd>
-                      <input
-                        type="number"
-                        min={1}
-                        max={130}
-                        value={form.age}
-                        onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))}
-                        className="w-full rounded-2xl border border-white/60 dark:border-white/15 bg-white/60 dark:bg-white/5 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      />
-                    </dd>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                      Gender (optional)
-                    </dt>
-                    <dd>
-                      <select
-                        value={form.gender}
-                        onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value }))}
-                        className="w-full rounded-2xl border border-white/60 dark:border-white/15 bg-white/60 dark:bg-white/5 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      >
-                        <option value="">Prefer not to say</option>
-                        <option value="female">Female</option>
-                        <option value="male">Male</option>
-                        <option value="non-binary">Non-binary</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </dd>
-                  </div>
                 </>
               ) : (
                 <>
@@ -412,50 +403,11 @@ export default function UserProfile() {
                       {profile.phone || "—"}
                     </dd>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                      Address
-                    </dt>
-                    <dd className="text-sm font-semibold text-slate-900 dark:text-white break-words whitespace-pre-wrap">
-                      {profile.address || "—"}
-                    </dd>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                      Age (optional)
-                    </dt>
-                    <dd className="text-sm font-semibold text-slate-900 dark:text-white break-words">
-                      {profile.age != null ? String(profile.age) : "—"}
-                    </dd>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                      Gender (optional)
-                    </dt>
-                    <dd className="text-sm font-semibold text-slate-900 dark:text-white break-words">
-                      {profile.gender || "—"}
-                    </dd>
-                  </div>
                 </>
               )}
-
               <div className="flex flex-col gap-1">
-                <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                  Email
-                </dt>
+                <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">Email</dt>
                 <dd className="text-sm font-semibold text-slate-900 dark:text-white break-words">{profile.email}</dd>
-              </div>
-              <div className="flex flex-col gap-1">
-                <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">Role</dt>
-                <dd className="text-sm font-semibold text-slate-900 dark:text-white break-words">{profile.role}</dd>
-              </div>
-              <div className="flex flex-col gap-1">
-                <dt className="text-xs font-extrabold uppercase tracking-wide text-slate-500 dark:text-white/45">
-                  Account created
-                </dt>
-                <dd className="text-sm font-semibold text-slate-900 dark:text-white break-words">
-                  {formatDate(profile.createdAt)}
-                </dd>
               </div>
             </dl>
           )}
@@ -476,7 +428,103 @@ export default function UserProfile() {
             </Link>
           </div>
         </div>
+
+        {/* MY SAVED DELIVERY LOCATIONS SECTION */}
+        <div className="rounded-3xl border border-[var(--cardBorder)] bg-[var(--card)] backdrop-blur-xl shadow-[var(--shadow)] p-6 md:p-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <MapPin className="text-emerald-600" size={20} /> My Saved Locations
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Manage your saved delivery addresses & map pins.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleOpenAddLocation}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-2xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition shadow"
+            >
+              <Plus size={14} /> Add Location
+            </button>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {locations.length === 0 ? (
+              <div className="text-center p-6 text-xs text-slate-500 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+                No saved locations yet. Click "+ Add Location" to save a location.
+              </div>
+            ) : (
+              locations.map((loc) => {
+                const Icon = loc.label === "Home" ? Home : loc.label === "Office" ? Briefcase : loc.label === "Shop" ? Store : MapPin;
+                return (
+                  <div
+                    key={loc.id}
+                    className="flex items-start justify-between gap-3 p-4 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-white/60 dark:border-white/10 shadow-sm"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Icon size={16} className="text-emerald-600" />
+                        <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                          {loc.label}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">
+                        {loc.address}
+                      </p>
+                      {loc.landmark && (
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Landmark: {loc.landmark}
+                        </p>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-400 mt-1">
+                        GPS: {loc.latitude?.toFixed(4)}, {loc.longitude?.toFixed(4)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditLocation(loc)}
+                        className="p-1.5 rounded-xl bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 transition"
+                        title="Edit Location"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLocation(loc.id)}
+                        className="p-1.5 rounded-xl bg-red-500/15 text-red-600 hover:bg-red-500/25 transition"
+                        title="Delete Location"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* LOCATION MAP PICKER MODAL */}
+      {showLocationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-3xl bg-[var(--card)] border border-[var(--cardBorder)] p-6 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+            <DeliveryMapPicker
+              initialLat={editingLocation ? editingLocation.latitude : 17.38504}
+              initialLng={editingLocation ? editingLocation.longitude : 78.48667}
+              initialAddress={editingLocation ? editingLocation.address : ""}
+              initialLandmark={editingLocation ? editingLocation.landmark : ""}
+              initialLabel={editingLocation ? editingLocation.label : "Home"}
+              showSaveOption={false}
+              onConfirm={handleSaveLocationFromMap}
+              onCancel={() => setShowLocationModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

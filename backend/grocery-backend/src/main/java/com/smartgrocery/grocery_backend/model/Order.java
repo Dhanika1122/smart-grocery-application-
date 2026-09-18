@@ -31,12 +31,25 @@ public class Order {
     private Integer quantity = 1;
 
     private double totalPrice;
+    private Double deliveryFee = 0.0;
 
     private String name;
     private String phone;
 
     @Column(length = 1000)
     private String address;
+
+    // Delivery Location Immutable Snapshot Fields
+    @Column(length = 1000)
+    private String deliveryAddress;
+
+    @Column(length = 500)
+    private String deliveryLandmark;
+
+    private Double deliveryLatitude;
+    private Double deliveryLongitude;
+
+    private String deliveryLocationLabel;
 
     private String paymentMethod;
 
@@ -118,6 +131,14 @@ public class Order {
         this.totalPrice = totalPrice;
     }
 
+    public Double getDeliveryFee() {
+        return deliveryFee;
+    }
+
+    public void setDeliveryFee(Double deliveryFee) {
+        this.deliveryFee = deliveryFee != null ? deliveryFee : 0.0;
+    }
+
     public String getName() {
         return name;
     }
@@ -140,6 +161,46 @@ public class Order {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public String getDeliveryLandmark() {
+        return deliveryLandmark;
+    }
+
+    public void setDeliveryLandmark(String deliveryLandmark) {
+        this.deliveryLandmark = deliveryLandmark;
+    }
+
+    public Double getDeliveryLatitude() {
+        return deliveryLatitude;
+    }
+
+    public void setDeliveryLatitude(Double deliveryLatitude) {
+        this.deliveryLatitude = deliveryLatitude;
+    }
+
+    public Double getDeliveryLongitude() {
+        return deliveryLongitude;
+    }
+
+    public void setDeliveryLongitude(Double deliveryLongitude) {
+        this.deliveryLongitude = deliveryLongitude;
+    }
+
+    public String getDeliveryLocationLabel() {
+        return deliveryLocationLabel;
+    }
+
+    public void setDeliveryLocationLabel(String deliveryLocationLabel) {
+        this.deliveryLocationLabel = deliveryLocationLabel;
     }
 
     public String getPaymentMethod() {

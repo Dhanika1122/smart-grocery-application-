@@ -10,10 +10,12 @@ import {
   User,
   LogOut,
   Search,
+  FolderTree,
 } from "lucide-react";
 
 function Navbar() {
   const [search, setSearch] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
   const [showLogout, setShowLogout] = useState(() => {
@@ -97,11 +99,15 @@ function Navbar() {
           </div>
         </div>
 
-        {/* 🔹 NAVIGATION */}
-        <div className="flex items-center gap-3">
+        {/* 🔹 NAVIGATION - desktop */}
+        <div className="hidden md:flex items-center gap-3">
 
           <Link to="/" className={navItem}>
             <Home size={18} /> Home
+          </Link>
+
+          <Link to="/categories" className={navItem}>
+            <FolderTree size={18} /> Categories
           </Link>
 
           <Link to="/recommend" className={navItem}>
@@ -137,6 +143,40 @@ function Navbar() {
           )}
 
         </div>
+
+        {/* 🔹 Mobile: cart + hamburger */}
+        <div className="flex md:hidden items-center gap-2">
+          <Link to="/cart" className="relative flex items-center px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-green-100 hover:text-green-700 transition">
+            <ShoppingCart size={18} />
+            <span className="sr-only">Cart</span>
+            <span className="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] px-1.5 rounded-full">2</span>
+          </Link>
+
+          <button
+            aria-label="Open menu"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="p-2 rounded-md hover:bg-gray-100"
+          >
+            {/* simple hamburger */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+              <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </div>
+
+        {mobileOpen && (
+          <div className="fixed top-14 right-3 left-3 z-50 bg-white rounded-xl shadow-lg p-4 border">
+            <div className="flex flex-col gap-2">
+              <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg">Home</Link>
+              <Link to="/categories" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg">Categories</Link>
+              <Link to="/recommend" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg">AI</Link>
+              <Link to="/orders" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg">Orders</Link>
+              <Link to="/user/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg">Profile</Link>
+              {!showLogout && <Link to="/userlogin" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg">Login</Link>}
+              {showLogout && <button onClick={() => { setMobileOpen(false); logout(); }} className="text-left px-3 py-2 rounded-lg">Logout</button>}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

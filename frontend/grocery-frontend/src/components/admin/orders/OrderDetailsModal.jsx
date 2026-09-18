@@ -1,6 +1,6 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, MapPin, Navigation } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatINR } from "../../../utils/format";
 
@@ -49,13 +49,61 @@ export default function OrderDetailsModal({ order, open, onClose, formatDate }) 
             <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.1fr_1.3fr]">
               <div className="rounded-3xl border border-white/20 bg-white/35 p-5 dark:bg-white/5">
                 <div className="text-sm font-extrabold uppercase tracking-[0.18em] text-slate-700/65 dark:text-white/50">
-                  Customer Info
+                  Customer & Delivery Location
                 </div>
                 <div className="mt-4 space-y-4 text-sm">
                   <InfoRow label="Name" value={order.name || "Unknown"} />
                   <InfoRow label="Email" value={order.customerEmail || "Not available"} />
                   <InfoRow label="Phone" value={order.phone || "Not available"} />
-                  <InfoRow label="Address" value={order.address || "Not available"} multiline />
+                  
+                  {order.deliveryLocationLabel && (
+                    <InfoRow
+                      label="Location Tag"
+                      value={
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                          <MapPin size={13} />
+                          {order.deliveryLocationLabel}
+                        </span>
+                      }
+                    />
+                  )}
+
+                  <InfoRow label="Delivery Address" value={order.deliveryAddress || order.address || "Not available"} multiline />
+                  
+                  {order.deliveryLandmark && (
+                    <InfoRow label="Landmark" value={order.deliveryLandmark} />
+                  )}
+
+                  {order.deliveryLatitude != null && order.deliveryLongitude != null && (
+                    <div>
+                      <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-700/55 dark:text-white/45">
+                        GPS Coordinates
+                      </div>
+                      <div className="mt-1 font-mono text-xs font-bold text-slate-800 dark:text-white/80">
+                        {order.deliveryLatitude.toFixed(6)}, {order.deliveryLongitude.toFixed(6)}
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${order.deliveryLatitude},${order.deliveryLongitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-emerald-700"
+                        >
+                          <Navigation size={13} />
+                          Navigate (Google Maps)
+                        </a>
+                        <a
+                          href={`https://www.openstreetmap.org/?mlat=${order.deliveryLatitude}&mlon=${order.deliveryLongitude}#map=17/${order.deliveryLatitude}/${order.deliveryLongitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white/70 px-3 py-1.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-white dark:border-white/20 dark:bg-white/10 dark:text-white"
+                        >
+                          <MapPin size={13} />
+                          View on Map
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

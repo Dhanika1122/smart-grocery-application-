@@ -8,8 +8,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.smartgrocery.grocery_backend.model.Admin;
+import com.smartgrocery.grocery_backend.model.Category;
 import com.smartgrocery.grocery_backend.model.Product;
 import com.smartgrocery.grocery_backend.repository.AdminRepository;
+import com.smartgrocery.grocery_backend.repository.CategoryRepository;
 import com.smartgrocery.grocery_backend.repository.ProductRepository;
 
 @Service
@@ -17,10 +19,12 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final AdminRepository adminRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository, AdminRepository adminRepository) {
+    public ProductService(ProductRepository productRepository, AdminRepository adminRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.adminRepository = adminRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     // Add product
@@ -68,6 +72,24 @@ public class ProductService {
 
     public List<Product> getProductsByAdmin(Long adminId) {
         return productRepository.findByAdmin_Id(adminId);
+    }
+
+    public List<Product> getProductsByCategory(String category) {
+        if (category == null || category.trim().isEmpty()) {
+            return getAllProducts();
+        }
+        return productRepository.findByCategoryIgnoreCase(category.trim());
+    }
+
+    public List<Product> getProductsByCategoryId(Long categoryId) {
+        if (categoryId == null) {
+            return getAllProducts();
+        }
+        Category category = categoryRepository.findById(categoryId).orElse(null);
+        if (category == null) {
+            return List.of();
+        }
+        return getProductsByCategory(category.getName());
     }
 
     public Long getAuthenticatedAdminIdOrNull() {

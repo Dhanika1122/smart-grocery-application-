@@ -152,10 +152,10 @@ const res = await API.get(`/products?adminId=${admin.id}`);
     const colors = ["#22c55e", "#16a34a", "#4ade80", "#86efac", "#bbf7d0"];
 
     return (
-      <div className="flex bg-gray-100 min-h-screen">
+      <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen">
 
         {/* SIDEBAR */}
-        <div className="w-64 bg-white shadow-lg p-6">
+        <div className="w-full md:w-64 bg-white shadow-lg p-6">
 
           <div className="flex items-center gap-3 mb-8">
             <img src={logo} alt="Dhanika" className="h-12 w-auto object-contain" />
@@ -181,7 +181,7 @@ const res = await API.get(`/products?adminId=${admin.id}`);
 
             <input
               placeholder="Search..."
-              className="border p-2 rounded-lg w-72"
+              className="border p-2 rounded-lg w-full md:w-72"
             />
 
             <div className="flex items-center gap-4">
@@ -198,7 +198,7 @@ const res = await API.get(`/products?adminId=${admin.id}`);
           </div>
 
           {/* CARDS */}
-          <div className="grid grid-cols-4 gap-6 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
             <div className="bg-white p-6 rounded-xl shadow">
               <p className="text-gray-500">Total Orders</p>
@@ -223,7 +223,7 @@ const res = await API.get(`/products?adminId=${admin.id}`);
           </div>
 
           {/* CHARTS */}
-          <div className="grid grid-cols-2 gap-6 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
 
             <div className="bg-white p-6 rounded-xl shadow">
               <h3 className="font-semibold mb-4">Weekly Sales</h3>

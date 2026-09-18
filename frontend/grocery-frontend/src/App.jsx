@@ -14,6 +14,8 @@ import UserLogin from "./pages/UserLogin";
 import UserRegister from "./pages/UserRegister";
 import AdminRegister from "./pages/AdminRegister";
 import UserProfile from "./pages/UserProfile";
+import DealDetailsPage from "./pages/DealDetailsPage";
+import CategoriesPage from "./pages/CategoriesPage";
 
 const AdminLayout = React.lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./pages/admin/Dashboard"));
@@ -23,6 +25,9 @@ const AdminInventory = React.lazy(() => import("./pages/admin/Inventory"));
 const AdminCustomers = React.lazy(() => import("./pages/admin/Customers"));
 const AdminMarketing = React.lazy(() => import("./pages/admin/Marketing"));
 const AdminProfile = React.lazy(() => import("./pages/admin/AdminProfile"));
+const AdminWeeklyDeals = React.lazy(() => import("./pages/admin/WeeklyDeals"));
+const AdminCategories = React.lazy(() => import("./pages/admin/Categories"));
+const AdminDeliverySettings = React.lazy(() => import("./pages/admin/DeliverySettings"));
 
 function AppChrome() {
   const location = useLocation();
@@ -32,10 +37,12 @@ function AppChrome() {
       {!isAdmin && <Navbar />}
       <Routes>
         <Route path="/" element={<ProductPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/recommend" element={<RecommendationPage />} />
         <Route path="/orders" element={<OrderHistory />} />
+        <Route path="/deals/:id" element={<DealDetailsPage />} />
         <Route path="/login" element={<AdminLogin />} />
         <Route path="/userlogin" element={<UserLogin />} />
         <Route path="/register" element={<UserRegister />} />
@@ -56,6 +63,30 @@ function AppChrome() {
             element={
               <Suspense fallback={<div className="p-6">Loading dashboard…</div>}>
                 <AdminDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="categories"
+            element={
+              <Suspense fallback={<div className="p-6">Loading categories…</div>}>
+                <AdminCategories />
+              </Suspense>
+            }
+          />
+          <Route
+            path="delivery-settings"
+            element={
+              <Suspense fallback={<div className="p-6">Loading delivery settings…</div>}>
+                <AdminDeliverySettings />
+              </Suspense>
+            }
+          />
+          <Route
+            path="deals"
+            element={
+              <Suspense fallback={<div className="p-6">Loading weekly deals…</div>}>
+                <AdminWeeklyDeals />
               </Suspense>
             }
           />

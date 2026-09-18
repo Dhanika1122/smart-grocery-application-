@@ -27,11 +27,19 @@ function StockPill({ stock }) {
 export default function Inventory() {
   const { loading, error, inventory, refresh } = useAdminData({ filter: "month" });
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState("stockAsc");
+  const [sort, setSort] = useState("sortAsc");
   const [cat, setCat] = useState("All");
   const [stockEdits, setStockEdits] = useState({});
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  const [managedCategories, setManagedCategories] = useState([]);
+
+  useEffect(() => {
+    API.get("/api/admin/categories")
+      .then((res) => setManagedCategories(res.data || []))
+      .catch((err) => console.error("Failed to load managed categories", err));
+  }, []);
 
   const [add, setAdd] = useState({
     name: "",
@@ -52,8 +60,11 @@ export default function Inventory() {
 
   const categories = useMemo(() => {
     const s = new Set(inventory.map((p) => (p.category || "Other").trim() || "Other"));
+    managedCategories.forEach((c) => {
+      if (c.name) s.add(c.name.trim());
+    });
     return ["All", ...Array.from(s).sort((a, b) => a.localeCompare(b))];
-  }, [inventory]);
+  }, [inventory, managedCategories]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -80,7 +91,7 @@ export default function Inventory() {
         key: "image",
         header: "Product",
         render: (p) => (
-          <div className="flex items-center gap-3 min-w-[220px]">
+          <div className="flex items-center gap-3 min-w-0 md:min-w-[220px]">
             <div className="h-10 w-10 rounded-2xl bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/10 overflow-hidden">
               {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
               <img src={p.image || "https://via.placeholder.com/40"} alt="Product image" className="h-full w-full object-cover" />
@@ -336,12 +347,18 @@ export default function Inventory() {
 
           <label className="flex flex-col gap-2">
             <span className="text-xs font-extrabold text-slate-700/80 dark:text-white/60">Category</span>
-            <input
+            <select
               value={add.category}
               onChange={(e) => setAdd((prev) => ({ ...prev, category: e.target.value }))}
               className="rounded-2xl px-4 py-2 bg-[var(--card)] border border-[var(--cardBorder)] backdrop-blur-xl shadow-sm outline-none text-sm font-semibold text-slate-900 dark:text-white"
-              placeholder="Fruits / Dairy / Drinks"
-            />
+            >
+              <option value="">Select Category</option>
+              {categories.filter(c => c !== "All").map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="flex flex-col gap-2">
