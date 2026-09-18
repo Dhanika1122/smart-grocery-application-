@@ -5,11 +5,14 @@ import logo from "../../assets/dhanika-logo.png";
 import {
   Boxes,
   ClipboardList,
+  FolderTree,
   LayoutDashboard,
   LineChart,
   Megaphone,
   Moon,
   Sun,
+  Tag,
+  Truck,
   Users,
   UserCircle2,
   PanelLeftClose,
@@ -18,6 +21,9 @@ import {
 
 const nav = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/categories", label: "Categories", icon: FolderTree },
+  { to: "/admin/deals", label: "Weekly Deals", icon: Tag },
+  { to: "/admin/delivery-settings", label: "Delivery Settings", icon: Truck },
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
   { to: "/admin/sales", label: "Sales", icon: LineChart },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
@@ -129,4 +135,3 @@ export default function Sidebar({ theme, setTheme }) {
     </aside>
   );
 }
-

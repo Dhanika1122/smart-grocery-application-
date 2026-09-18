@@ -40,13 +40,13 @@ function ProductCard({ product, addToCart, highlight }) {
       }}
       whileHover={{ scale: 1.02 }}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
-      className={`group relative rounded-3xl p-[1px] 
+      className={`group relative rounded-3xl p-[1px] min-w-0
         ${highlight
           ? "bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-200 shadow-xl"
           : "bg-gradient-to-r from-emerald-400/90 via-emerald-200/55 to-amber-200/85"
         }`}
     >
-      <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white/75 backdrop-blur-xl shadow-sm p-5 text-center">
+      <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white/75 backdrop-blur-xl shadow-sm p-5 text-center min-w-0">
         
         {/* IMAGE */}
         <motion.div
@@ -62,7 +62,7 @@ function ProductCard({ product, addToCart, highlight }) {
         </motion.div>
 
         {/* NAME */}
-        <h3 className="text-[15px] md:text-[16px] font-semibold text-slate-900">
+        <h3 className="text-[15px] md:text-[16px] font-semibold text-slate-900 break-words">
           {product.name}
         </h3>
 

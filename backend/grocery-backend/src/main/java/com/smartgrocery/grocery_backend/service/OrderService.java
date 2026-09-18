@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,10 +13,13 @@ import com.smartgrocery.grocery_backend.dto.OrderItemRequest;
 import com.smartgrocery.grocery_backend.dto.OrderItemResponse;
 import com.smartgrocery.grocery_backend.dto.OrderRequest;
 import com.smartgrocery.grocery_backend.dto.OrderResponse;
+import com.smartgrocery.grocery_backend.model.CustomerLocation;
+import com.smartgrocery.grocery_backend.model.DeliverySettings;
 import com.smartgrocery.grocery_backend.model.Order;
 import com.smartgrocery.grocery_backend.model.OrderItem;
 import com.smartgrocery.grocery_backend.model.OrderStatus;
 import com.smartgrocery.grocery_backend.model.Product;
+import com.smartgrocery.grocery_backend.repository.CustomerLocationRepository;
 import com.smartgrocery.grocery_backend.repository.OrderRepository;
 import com.smartgrocery.grocery_backend.repository.ProductRepository;
 import com.smartgrocery.grocery_backend.repository.UserRepository;
@@ -28,11 +32,15 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CustomerLocationRepository locationRepository;
+    private final DeliverySettingsService deliverySettingsService;
 
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository, UserRepository userRepository) {
+    public OrderService(OrderRepository orderRepository, ProductRepository productRepository, UserRepository userRepository, CustomerLocationRepository locationRepository, DeliverySettingsService deliverySettingsService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.locationRepository = locationRepository;
+        this.deliverySettingsService = deliverySettingsService;
     }
 
     @Transactional
@@ -50,9 +58,6 @@ public class OrderService {
         if (requestedItems == null || requestedItems.isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one item");
         }
-        if (request.getAddress() == null || request.getAddress().isBlank()) {
-            throw new IllegalArgumentException("Address is required");
-        }
         if (request.getPaymentMethod() == null || request.getPaymentMethod().isBlank()) {
             throw new IllegalArgumentException("Payment method is required");
         }
@@ -60,7 +65,6 @@ public class OrderService {
         Order order = new Order();
         order.setName(request.getName());
         order.setPhone(request.getPhone());
-        order.setAddress(request.getAddress());
         order.setPaymentMethod(request.getPaymentMethod());
         order.setPaymentStatus(request.getPaymentStatus());
         order.setRazorpayOrderId(request.getRazorpayOrderId());
@@ -68,7 +72,10 @@ public class OrderService {
         order.setUserId(userId);
         order.setStatus(OrderStatus.PENDING);
 
-        double totalAmount = 0;
+        // Process Mandatory Delivery Location Snapshot
+        processDeliveryLocation(request, userId, order);
+
+        double subtotal = 0;
         int totalQuantity = 0;
         List<OrderItem> items = new ArrayList<>();
         for (OrderItemRequest itemRequest : requestedItems) {
@@ -88,7 +95,7 @@ public class OrderService {
             item.setPrice(product.getPrice());
             items.add(item);
 
-            totalAmount += product.getPrice() * itemRequest.getQuantity();
+            subtotal += product.getPrice() * itemRequest.getQuantity();
             totalQuantity += itemRequest.getQuantity();
         }
 
@@ -102,13 +109,84 @@ public class OrderService {
             throw new IllegalArgumentException("Quantity is missing");
         }
 
-        order.setTotalPrice(totalAmount);
+        // Authoritative Database Delivery Fee Calculation
+        DeliverySettings settings = deliverySettingsService.getDeliverySettings();
+        double deliveryFee = (subtotal >= settings.getFreeDeliveryMinimum()) ? 0.0 : settings.getDeliveryFee();
+        double finalTotalPrice = Math.max(0.0, subtotal + deliveryFee);
+
+        order.setDeliveryFee(deliveryFee);
+        order.setTotalPrice(finalTotalPrice);
         order.setQuantity(finalQuantity);
         order.setItems(items);
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order saved successfully with orderId={} for userId={}", savedOrder.getId(), userId);
         return toResponse(savedOrder);
+    }
+
+    private void processDeliveryLocation(OrderRequest request, Long userId, Order order) {
+        String finalAddress;
+        String finalLandmark;
+        Double finalLat;
+        Double finalLng;
+        String finalLabel;
+
+        if (request.getDeliveryLocationId() != null) {
+            // Case 1: Customer selected a saved location
+            CustomerLocation savedLocation = locationRepository.findByIdAndUserIdAndActiveTrue(request.getDeliveryLocationId(), userId)
+                    .orElseThrow(() -> new AccessDeniedException("Selected saved delivery location is invalid or does not belong to you"));
+
+            finalAddress = savedLocation.getAddress();
+            finalLandmark = savedLocation.getLandmark();
+            finalLat = savedLocation.getLatitude();
+            finalLng = savedLocation.getLongitude();
+            finalLabel = savedLocation.getLabel();
+        } else if (request.getDeliveryLatitude() != null && request.getDeliveryLongitude() != null) {
+            // Case 2: Customer provided coordinates (GPS / Custom Map pin)
+            finalLat = request.getDeliveryLatitude();
+            finalLng = request.getDeliveryLongitude();
+
+            if (finalLat < -90.0 || finalLat > 90.0 || finalLng < -180.0 || finalLng > 180.0) {
+                throw new IllegalArgumentException("Valid delivery latitude (-90..90) and longitude (-180..180) are required");
+            }
+
+            finalAddress = request.getDeliveryAddress() != null && !request.getDeliveryAddress().isBlank()
+                    ? request.getDeliveryAddress().trim()
+                    : request.getAddress();
+
+            if (finalAddress == null || finalAddress.isBlank()) {
+                throw new IllegalArgumentException("Delivery address is required");
+            }
+
+            finalLandmark = request.getDeliveryLandmark() != null ? request.getDeliveryLandmark().trim() : "";
+            finalLabel = request.getDeliveryLocationLabel() != null && !request.getDeliveryLocationLabel().isBlank()
+                    ? request.getDeliveryLocationLabel().trim()
+                    : "Delivery Location";
+
+            // Optional: Save as reusable customer location if requested
+            if (Boolean.TRUE.equals(request.getSaveLocation())) {
+                CustomerLocation newLocation = new CustomerLocation(userId, finalLabel, finalAddress, finalLandmark, finalLat, finalLng);
+                locationRepository.save(newLocation);
+            }
+        } else if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            // Fallback for legacy calls without explicit coordinates
+            finalAddress = request.getAddress().trim();
+            finalLandmark = request.getDeliveryLandmark() != null ? request.getDeliveryLandmark() : "";
+            finalLat = 17.38504; // Default city fallback (Hyderabad) for legacy orders
+            finalLng = 78.48667;
+            finalLabel = "Delivery Address";
+        } else {
+            throw new IllegalArgumentException("Please select or confirm a valid delivery location before placing your order");
+        }
+
+        // Write IMMUTABLE Snapshot into Order record
+        order.setDeliveryAddress(finalAddress);
+        order.setDeliveryLandmark(finalLandmark);
+        order.setDeliveryLatitude(finalLat);
+        order.setDeliveryLongitude(finalLng);
+        order.setDeliveryLocationLabel(finalLabel);
+        // Also populate legacy address field for backwards compatibility
+        order.setAddress(finalAddress);
     }
 
     @Transactional(readOnly = true)
@@ -131,12 +209,23 @@ public class OrderService {
         response.setRazorpayPaymentId(order.getRazorpayPaymentId());
         response.setName(order.getName());
         response.setPhone(order.getPhone());
-        response.setAddress(order.getAddress());
+        response.setAddress(order.getDeliveryAddress() != null ? order.getDeliveryAddress() : order.getAddress());
+
+        // Delivery Location Snapshot
+        response.setDeliveryAddress(order.getDeliveryAddress() != null ? order.getDeliveryAddress() : order.getAddress());
+        response.setDeliveryLandmark(order.getDeliveryLandmark());
+        response.setDeliveryLatitude(order.getDeliveryLatitude() != null ? order.getDeliveryLatitude() : 17.38504);
+        response.setDeliveryLongitude(order.getDeliveryLongitude() != null ? order.getDeliveryLongitude() : 78.48667);
+        response.setDeliveryLocationLabel(order.getDeliveryLocationLabel() != null ? order.getDeliveryLocationLabel() : "Delivery Location");
+
         response.setCreatedAt(order.getCreatedAt());
 
         List<OrderItemResponse> items = mapItems(order);
         response.setProducts(items);
-        response.setTotalAmount(items.stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum());
+        double itemsSubtotal = items.stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum();
+        double orderDeliveryFee = order.getDeliveryFee() != null ? order.getDeliveryFee() : 0.0;
+        response.setDeliveryFee(orderDeliveryFee);
+        response.setTotalAmount(order.getTotalPrice() > 0 ? order.getTotalPrice() : (itemsSubtotal + orderDeliveryFee));
         return response;
     }
 

@@ -30,9 +30,9 @@ function HeroBanner({ scrollToProducts }) {
       {/* 🌈 BACKGROUND LAYERS */}
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-400/20 via-white/30 to-yellow-200/30 backdrop-blur-xl"></div>
 
-      {/* Glow Effects */}
-      <div className="absolute -top-10 -right-10 w-72 h-72 bg-emerald-400/30 blur-[100px] rounded-full"></div>
-      <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-yellow-300/30 blur-[100px] rounded-full"></div>
+      {/* Glow Effects (hide on very small screens to avoid overflow) */}
+      <div className="hidden sm:block absolute -top-10 -right-10 w-72 h-72 bg-emerald-400/30 blur-[100px] rounded-full"></div>
+      <div className="hidden sm:block absolute -bottom-10 -left-10 w-72 h-72 bg-yellow-300/30 blur-[100px] rounded-full"></div>
 
       {/* MAIN CARD */}
       <motion.div
@@ -109,8 +109,8 @@ function HeroBanner({ scrollToProducts }) {
               )}
             </div>
 
-            {/* Glow behind avatar */}
-            <div className="absolute w-64 h-64 bg-emerald-400/30 blur-3xl rounded-full -z-10"></div>
+            {/* Glow behind avatar (hide on small screens) */}
+            <div className="hidden sm:block absolute w-64 h-64 bg-emerald-400/30 blur-3xl rounded-full -z-10"></div>
           </div>
 
         </div>

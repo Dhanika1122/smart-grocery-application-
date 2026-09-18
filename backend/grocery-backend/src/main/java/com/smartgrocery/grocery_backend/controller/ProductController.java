@@ -33,17 +33,28 @@ public Product addProduct(@RequestBody Product product) {
         return productService.saveProduct(product);
     }
 
-    // Get all products
+    // Get all products or filter by category/categoryId
     @GetMapping
-public List<Product> getProducts(@RequestParam(required = false) Long adminId) {
-    // Admin isolation: if JWT admin is authenticated, always return only their products.
-    // Ignore `adminId` query param to prevent cross-tenant access.
-    Long authenticatedAdminId = productService.getAuthenticatedAdminIdOrNull();
-    if (authenticatedAdminId != null) {
-        return productService.getProductsByAdmin(authenticatedAdminId);
-    }
+    public List<Product> getProducts(
+            @RequestParam(required = false) Long adminId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long categoryId) {
+        // Admin isolation: if JWT admin is authenticated, always return only their products.
+        // Ignore `adminId` query param to prevent cross-tenant access.
+        Long authenticatedAdminId = productService.getAuthenticatedAdminIdOrNull();
+        if (authenticatedAdminId != null) {
+            return productService.getProductsByAdmin(authenticatedAdminId);
+        }
 
-    return productService.getAllProducts(); // public fallback
+        if (categoryId != null) {
+            return productService.getProductsByCategoryId(categoryId);
+        }
+
+        if (category != null && !category.trim().isEmpty()) {
+            return productService.getProductsByCategory(category);
+        }
+
+        return productService.getAllProducts(); // public fallback
     }
 
     // Delete product
